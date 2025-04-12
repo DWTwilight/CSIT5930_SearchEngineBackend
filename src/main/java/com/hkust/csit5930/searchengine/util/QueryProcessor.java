@@ -5,14 +5,12 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.tartarus.snowball.ext.PorterStemmer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
-public class QueryTokenizer {
+public class QueryProcessor {
     private final Set<String> stopWords;
     private final PorterStemmer stem = new PorterStemmer();
 
@@ -32,6 +30,11 @@ public class QueryTokenizer {
         }
 
         return tokens;
+    }
+
+    @NonNull
+    public Map<String, Long> vectorize(@NonNull List<Token> tokens) {
+        return tokens.stream().collect(Collectors.groupingBy(Token::word, Collectors.counting()));
     }
 
     public record Token(String word, int pos) {

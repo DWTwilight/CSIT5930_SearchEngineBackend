@@ -108,12 +108,12 @@ curl --location -g --request GET '{domain}/api/v1/s?q=spring+boot'
 
 ## Start the Server
 
-### Prerequisite
+### 1. Prerequisite
 
 - docker
 - docker compose plugin
 
-### Start Database
+### 2. Start Database
 
 ```sh 
 sudo docker compose create
@@ -126,22 +126,24 @@ A postgres db container will be running on port `5432`, its data will be persist
 - password: `test123`
 - database name: `se_db`
 
-### Migrate Data to DB
+### 3. Start Backend Server
+
+#### 3.1 Start Server with Docker
 
 TODO
 
-### Start Server with Docker
+#### 3.2 Build and Start Server from Source with Gradle Wrapper(**Optional**)
 
-TODO
-
-### Build and Start Server from Source with Gradle Wrapper
-
-#### Prerequisite
+##### Prerequisite
 
 - JDK 21
 
-#### Command
+##### Command
 
 ```sh 
 ./gradlew clean bootRun --args='--spring.profiles.active=local'
 ```
+
+### 4. Migrate Data to DB
+
+TODO

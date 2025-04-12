@@ -10,15 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import java.util.List;
 
-@SpringBootTest(classes = {QueryTokenizer.class, StopWordsConfiguration.class})
-class QueryTokenizerTest {
+@SpringBootTest(classes = {QueryProcessor.class, StopWordsConfiguration.class})
+class QueryProcessorTest {
 
     @Autowired
-    private QueryTokenizer tokenizer;
+    private QueryProcessor queryProcessor;
 
     @Test
     void should_tokenize_with_position() {
-        List<QueryTokenizer.Token> result = tokenizer.tokenize("the quick brown foxes' jumps");
+        List<QueryProcessor.Token> result = queryProcessor.tokenize("the quick brown foxes' jumps");
 
         assertAll(
                 () -> assertEquals(4, result.size()),
@@ -31,8 +31,8 @@ class QueryTokenizerTest {
     @ParameterizedTest
     @MethodSource("tokenizeCases")
     void parameterized_tokenize_test(String input, List<String> expectedWords) {
-        List<QueryTokenizer.Token> tokens = tokenizer.tokenize(input);
-        assertIterableEquals(expectedWords, tokens.stream().map(QueryTokenizer.Token::word).toList());
+        List<QueryProcessor.Token> tokens = queryProcessor.tokenize(input);
+        assertIterableEquals(expectedWords, tokens.stream().map(QueryProcessor.Token::word).toList());
     }
 
     private static List<Arguments> tokenizeCases() {
@@ -45,12 +45,20 @@ class QueryTokenizerTest {
 
     @Test
     void should_handle_all_stopwords() {
-        assertEquals(0, tokenizer.tokenize("a an the").size());
+        assertEquals(0, queryProcessor.tokenize("a an the").size());
     }
 
     @Test
     void should_keep_numbers_and_special_chars() {
-        List<QueryTokenizer.Token> tokens = tokenizer.tokenize("123@test");
+        List<QueryProcessor.Token> tokens = queryProcessor.tokenize("123@test");
         assertEquals("123", tokens.get(0).word());
+    }
+
+    @Test
+    void should_vectorize_tokens() {
+        List<QueryProcessor.Token> tokens = queryProcessor.tokenize("this is a vectorize test, let's see the test results");
+        var vector = queryProcessor.vectorize(tokens);
+        assertEquals(3, vector.size());
+        assertEquals(2, vector.get("test"));
     }
 }
