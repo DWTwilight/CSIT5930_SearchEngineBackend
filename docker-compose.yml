@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:17.4-alpine
+    container_name: se_postgresql
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: test123
+      POSTGRES_DB: se_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:    

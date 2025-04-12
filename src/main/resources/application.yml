@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: "Search Engine Backend"
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    jpa:
+      hibernate:
+        ddl-auto: none
+    hikari:
+      maximum-pool-size: 4
+      minimum-idle: 2
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      connection-test-query: "SELECT 1"
+      pool-name: SearchEngineDBPool
+      leak-detection-threshold: 5000
