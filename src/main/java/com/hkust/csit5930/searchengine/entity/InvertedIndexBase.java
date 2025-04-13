@@ -25,13 +25,16 @@ import java.util.List;
 public class InvertedIndexBase implements Serializable {
     @Id
     private Long id;
+
     private String term;
+
     @Column(name = "documents", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Document> documents;
-    @Column(updatable = false)
+
     @CreatedDate
     private LocalDateTime createdAt;
+
     @LastModifiedDate
     private LocalDateTime updatedAt;
 

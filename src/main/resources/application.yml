@@ -23,3 +23,6 @@ cache:
     index:
       size: 20
       ttl: 30
+    doc:
+      size: 75
+      ttl: 30

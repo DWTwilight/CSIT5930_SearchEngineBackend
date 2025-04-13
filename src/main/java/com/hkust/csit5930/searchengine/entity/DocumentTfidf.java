@@ -25,11 +25,11 @@ public class DocumentTfidf {
 
     @Column(name = "title_tfidf_vec", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<Long, Long> titleTfidfVector;
+    private Map<Long, Double> titleTfidfVector;
 
     @Column(name = "body_tfidf_vec", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
-    private Map<Long, Long> bodyTfidfVector;
+    private Map<Long, Double> bodyTfidfVector;
 
     @CreatedDate
     private LocalDateTime createdAt;
