@@ -1,0 +1,23 @@
+CREATE TABLE document_meta (
+    id BIGINT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    url TEXT NOT NULL UNIQUE,
+    last_modified VARCHAR(255) NOT NULL,
+    size BIGINT NOT NULL,
+    freq_words JSONB NOT NULL,
+    parent_links JSONB NOT NULL,
+    child_links JSONB NOT NULL,
+    max_title_tf BIGINT NOT NULL,
+    max_body_tf BIGINT NOT NULL,
+    page_rank DOUBLE PRECISION NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE document_tfidf (
+    id BIGINT PRIMARY KEY REFERENCES document_meta(id) ON DELETE CASCADE,
+    title_tfidf_vec JSONB NOT NULL,
+    body_tfidf_vec JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

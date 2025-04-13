@@ -18,3 +18,8 @@ spring:
       connection-test-query: "SELECT 1"
       pool-name: SearchEngineDBPool
       leak-detection-threshold: 5000
+cache:
+  memory:
+    index:
+      size: 20
+      ttl: 30

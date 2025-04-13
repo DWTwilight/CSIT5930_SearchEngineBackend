@@ -3,7 +3,6 @@ package com.hkust.csit5930.searchengine.entity;
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -11,38 +10,51 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
-@ToString(callSuper = true)
-@MappedSuperclass
+@ToString
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvertedIndexBase implements Serializable {
+public class DocumentMeta {
     @Id
     private Long id;
-    private String term;
-    @Column(name = "documents", columnDefinition = "jsonb")
+
+    private String title;
+
+    private String url;
+
+    private String lastModified;
+
+    private Long size;
+
+    @Column(name = "freq_words", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
-    private List<Document> documents;
-    @Column(updatable = false)
+    private Map<String, Long> frequentWords;
+
+    @Column(name = "parent_links", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> parentLinks;
+
+    @Column(name = "child_links", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
+    private List<String> childLinks;
+
+    // for normalization
+    private Long maxTitleTf;
+
+    // for normalization
+    private Long maxBodyTf;
+
+    private Double pageRank;
+
     @CreatedDate
     private LocalDateTime createdAt;
+
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @ToString
-    public static class Document implements Serializable {
-        private Long id;
-        private Long count;
-        private List<Long> pos;
-    }
 }

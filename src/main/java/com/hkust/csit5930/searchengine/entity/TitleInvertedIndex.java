@@ -9,7 +9,6 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 @ToString
 public class TitleInvertedIndex extends InvertedIndexBase implements Serializable {
 
