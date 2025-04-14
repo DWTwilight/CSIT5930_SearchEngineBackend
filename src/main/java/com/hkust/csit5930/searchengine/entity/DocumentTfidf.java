@@ -6,6 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.io.Serializable;
 import java.util.Map;
 
 @Entity
@@ -14,7 +15,7 @@ import java.util.Map;
 @ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class DocumentTfidf extends EntityBase {
+public class DocumentTfidf extends EntityBase implements Serializable {
     @Column(name = "title_tfidf_vec", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<Long, Double> titleTfidfVector;

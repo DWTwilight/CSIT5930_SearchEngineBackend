@@ -10,6 +10,8 @@ spring:
         hibernate:
           dialect: org.hibernate.dialect.PostgreSQLDialect
     hikari:
+      schema: public
+      read-only: false
       maximum-pool-size: 4
       minimum-idle: 2
       idle-timeout: 600000

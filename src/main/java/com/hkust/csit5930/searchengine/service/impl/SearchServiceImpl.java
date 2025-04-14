@@ -42,14 +42,13 @@ public class SearchServiceImpl implements SearchService {
         return Math.sqrt(tfidfVector.values().stream().mapToDouble(v -> v * v).sum());
     }
 
-    private static List<Pair<Long, Double>> calculateDocumentBigramMatches(Pair<String, String> bigram, InvertedIndexBase termAIndex, InvertedIndexBase termBIndex) {
-
+    private static List<Pair<Long, Long>> calculateDocumentBigramMatches(InvertedIndexBase termAIndex, InvertedIndexBase termBIndex) {
         return termAIndex.getDocuments().stream()
                 .flatMap(documentTermA ->
                         Stream.ofNullable(
                                 termBIndex.findDocumentById(documentTermA.getId())
                                         .map(documentTermB -> {
-                                            var count = 0;
+                                            long count = 0;
                                             int i = 0, j = 0;
                                             var posListA = documentTermA.getPos();
                                             var posListB = documentTermB.getPos();
@@ -69,7 +68,7 @@ public class SearchServiceImpl implements SearchService {
                                             if (count == 0) {
                                                 return null;
                                             }
-                                            return Pair.of(documentTermB.getId(), (double) count / Math.min(documentTermA.getCount(), documentTermB.getCount()));
+                                            return Pair.of(documentTermB.getId(), count);
                                         }).orElse(null)))
                 .toList();
     }
@@ -94,11 +93,11 @@ public class SearchServiceImpl implements SearchService {
         var titleIndexMap = invertedIndexService.findTitleIndexByTermIn(queryVector.keySet());
 
         // get candidate document ids
-        var titleCandidateDocumentIds = bodyIndexMap.values().stream()
+        var titleCandidateDocumentIds = titleIndexMap.values().stream()
                 .flatMap(index -> index.getDocuments().stream()
                         .map(InvertedIndexBase.Document::getId))
                 .collect(Collectors.toUnmodifiableSet());
-        var bodyCandidateDocumentIds = titleIndexMap.values().stream()
+        var bodyCandidateDocumentIds = bodyIndexMap.values().stream()
                 .flatMap(index -> index.getDocuments().stream()
                         .map(InvertedIndexBase.Document::getId))
                 .collect(Collectors.toUnmodifiableSet());
@@ -163,6 +162,9 @@ public class SearchServiceImpl implements SearchService {
                                                       long totalDocumentCount,
                                                       Converter<DocumentTfidf, Map<Long, Double>> tfidfVectorExtractor,
                                                       Converter<DocumentTfidf, Double> docMagnitudeExtractor) {
+        if (candidateDocumentIds.isEmpty()) {
+            return Map.of();
+        }
         // 1. calculate tf-idf cosine similarity
         // 1.1 calculate query tf-idf
         long maxTf = Collections.max(queryVector.values());
@@ -195,7 +197,7 @@ public class SearchServiceImpl implements SearchService {
 
                     // calculate bigram tf-idf in all documents
                     // 1. find matches in each doc, list: docId -> normalized tf (tf / max possible count)
-                    var documentBigramMatches = calculateDocumentBigramMatches(bigram, termAIndex, termBIndex);
+                    var documentBigramMatches = calculateDocumentBigramMatches(termAIndex, termBIndex);
                     if (documentBigramMatches.isEmpty()) {
                         return Stream.empty();
                     }
@@ -210,7 +212,7 @@ public class SearchServiceImpl implements SearchService {
 
         // 3. normalize and combine the scores
         var maxCosineSimScore = cosineSimilarityScores.stream().mapToDouble(Pair::getSecond).max().getAsDouble();
-        var maxBigramScore = Collections.max(bigramMatchScores.values());
+        var maxBigramScore = bigramMatchScores.isEmpty() ? 1 : Collections.max(bigramMatchScores.values());
         return cosineSimilarityScores.stream()
                 .map(cosineSim -> Pair.of(cosineSim.getFirst(),
                         searchEngineConfiguration.getCosineWeight() * (cosineSim.getSecond() / maxCosineSimScore)
