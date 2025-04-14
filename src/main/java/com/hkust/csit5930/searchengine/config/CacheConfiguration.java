@@ -23,7 +23,7 @@ public class CacheConfiguration {
 
         manager.registerCustomCache(BODY_INDEX_CACHE,
                 Caffeine.newBuilder()
-                        .maximumSize(size * 2L)
+                        .maximumSize(size)
                         .expireAfterWrite(ttl, TimeUnit.MINUTES)
                         .build());
 

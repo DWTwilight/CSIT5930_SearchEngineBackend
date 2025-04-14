@@ -52,7 +52,10 @@ public class InvertedIndexServiceImpl implements InvertedIndexService {
         terms.forEach(term -> {
             Cache.ValueWrapper wrapper = cache.get(term);
             if (wrapper != null) {
-                cachedResults.put(term, (InvertedIndexBase) wrapper.get());
+                var cachedIndex = (InvertedIndexBase) wrapper.get();
+                if (Objects.nonNull(cachedIndex)) {
+                    cachedResults.put(term, cachedIndex);
+                }
             } else {
                 missingTerms.add(term);
             }
@@ -63,11 +66,19 @@ public class InvertedIndexServiceImpl implements InvertedIndexService {
                     .map(index -> (InvertedIndexBase) index)
                     .toList();
 
-            dbResults.forEach(index -> cache.put(index.getTerm(), index));
-            dbResults.forEach(index -> cachedResults.put(index.getTerm(), index));
+            dbResults.forEach(index -> {
+                String term = index.getTerm();
+                cache.put(term, index);
+                cachedResults.put(term, index);
+                missingTerms.remove(term);
+            });
         }
 
-        return cachedResults;
+        if (!missingTerms.isEmpty()) {
+            missingTerms.forEach(term -> cache.put(term, null));
+        }
+
+        return Collections.unmodifiableMap(cachedResults);
     }
 
 

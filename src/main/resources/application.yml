@@ -11,7 +11,7 @@ spring:
           dialect: org.hibernate.dialect.PostgreSQLDialect
     hikari:
       schema: public
-      read-only: false
+      read-only: true
       maximum-pool-size: 4
       minimum-idle: 2
       idle-timeout: 600000
@@ -23,7 +23,7 @@ spring:
 cache:
   memory:
     index:
-      size: 20
+      size: 100
       ttl: 30
     doc:
       size: 100
