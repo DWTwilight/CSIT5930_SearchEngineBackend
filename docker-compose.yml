@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:17.4-alpine
-    container_name: se_postgresql
+    container_name: se_pgsql
     ports:
       - "5432:5432"
     environment:

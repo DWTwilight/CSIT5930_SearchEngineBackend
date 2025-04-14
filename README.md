@@ -111,9 +111,21 @@ curl --location -g --request GET '{domain}/api/v1/s?q=spring+boot'
 ### 1. Prerequisite
 
 - docker
-- docker compose plugin
+- docker compose plugin (optional)
 
 ### 2. Start Database
+
+```sh 
+docker run -d \
+  --name se_pgsql \
+  -p 5432:5432 \
+  -e POSTGRES_PASSWORD=test123 \
+  -e POSTGRES_DB=se_db \
+  -v postgres_data:/var/lib/postgresql/data \
+  postgres:17.4-alpine
+```
+
+Or use `docker-compose`:
 
 ```sh 
 sudo docker compose create
@@ -128,22 +140,39 @@ A postgres db container will be running on port `5432`, its data will be persist
 
 ### 3. Start Backend Server
 
-#### 3.1 Start Server with Docker
+#### **Option A**: Start Server with Docker
 
-TODO
+```sh 
+sudo docker run -it -p 8080:8080 --network="host" --name se-backend dwtwilight/csit5930-search-engine-backend:latest
+```
 
-#### 3.2 Build and Start Server from Source with Gradle Wrapper(**Optional**)
+A server container will be running on port 8080, and database tables will be created automatically.
+
+#### **Option B**: Build and Start Server from Source with Gradle Wrapper(**Optional**)
 
 ##### Prerequisite
 
-- JDK 21
+- Graalvm JDK 21 (https://www.graalvm.org/downloads/#)
 
 ##### Command
 
 ```sh 
-./gradlew clean bootRun --args='--spring.profiles.active=local'
+./gradlew clean nativeCompile #  will take up to 10 minutes
+sudo docker build -t dwtwilight/csit5930-search-engine-backend:latest .
+sudo docker run -it -p 8080:8080 --network="host" --name se-backend dwtwilight/csit5930-search-engine-backend:latest
 ```
 
 ### 4. Migrate Data to DB
 
-TODO
+```sh 
+# enter crawler repo (https://github.com/Yubelo3/SearchEngineDataPreperation.git)
+cd ../SearchEngineDataPreperation
+
+# do data crawling first!
+
+# start data migration
+# pip install psycopg2-binary
+python migrate_db.py
+```
+
+### 5. Call Search Api
