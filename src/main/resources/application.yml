@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: local
   application:
     name: "Search Engine Backend"
   datasource:
@@ -11,7 +13,7 @@ spring:
           dialect: org.hibernate.dialect.PostgreSQLDialect
     hikari:
       schema: public
-      read-only: true
+      read-only: false
       maximum-pool-size: 4
       minimum-idle: 2
       idle-timeout: 600000
@@ -23,10 +25,10 @@ spring:
 cache:
   memory:
     index:
-      size: 100
+      size: 150
       ttl: 30
     doc:
-      size: 100
+      size: 300
       ttl: 30
 search-engine:
   title-weight: 0.7

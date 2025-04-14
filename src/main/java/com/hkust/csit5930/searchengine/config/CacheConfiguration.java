@@ -42,7 +42,7 @@ public class CacheConfiguration {
 
         manager.registerCustomCache(DOCUMENT_TFIDF_CACHE,
                 Caffeine.newBuilder()
-                        .maximumSize(size * 2L)
+                        .maximumSize(size)
                         .expireAfterWrite(ttl, TimeUnit.MINUTES)
                         .build());
 

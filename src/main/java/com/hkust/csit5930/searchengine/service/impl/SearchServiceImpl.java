@@ -82,6 +82,7 @@ public class SearchServiceImpl implements SearchService {
 
         // tokenize with stop word removal and stemming
         var queryTokens = queryProcessor.tokenize(query);
+        log.debug("tokenized query: {}", queryTokens);
         if (queryTokens.isEmpty()) {
             return List.of();
         }

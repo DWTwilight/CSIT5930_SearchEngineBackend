@@ -1,7 +1,9 @@
 plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.4.4'
+	id 'org.springframework.boot.aot' version '3.4.4'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.graalvm.buildtools.native' version '0.10.6'
 }
 
 group = 'com.hkust.csit5930'
@@ -24,7 +26,6 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-cache'
@@ -44,4 +45,14 @@ dependencies {
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+graalvmNative {
+	binaries.all {
+		resources.autodetect()
+	}
+
+    binaries.main {
+        buildArgs.add('-O3')
+    }
 }
