@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @NoArgsConstructor
-@ToString
+@ToString(callSuper = true)
 public class BodyInvertedIndex extends InvertedIndexBase implements Serializable {
 
 }

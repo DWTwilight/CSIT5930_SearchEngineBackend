@@ -24,5 +24,14 @@ cache:
       size: 20
       ttl: 30
     doc:
-      size: 75
+      size: 100
       ttl: 30
+search-engine:
+  title-weight: 0.7
+  body-weight: 0.3
+  cosine-weight: 0.7
+  bigram-weight: 0.3
+  relevance-weight: 0.9
+  page-rank-weight: 0.1
+  min-score-threshold: 0
+  max-result-count: 50

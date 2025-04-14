@@ -9,6 +9,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.util.Pair;
+
 import java.util.List;
 
 @SpringBootTest(classes = {QueryProcessor.class, StopWordsConfiguration.class})
@@ -61,5 +63,13 @@ class QueryProcessorTest {
         var vector = queryProcessor.vectorize(tokens);
         assertEquals(3, vector.size());
         assertEquals(2, vector.get("test"));
+    }
+
+    @Test
+    void should_get_bigrams() {
+        List<QueryProcessor.Token> tokens = queryProcessor.tokenize("this is a vectorize test, let's see the test results, and a vectorize test");
+        var bigrams = queryProcessor.getBigrams(tokens);
+        assertEquals(2, bigrams.size());
+        assertEquals(2, bigrams.get(Pair.of("vector", "test")));
     }
 }

@@ -1,5 +1,6 @@
 package com.hkust.csit5930.searchengine.service;
 
+import com.hkust.csit5930.searchengine.entity.DocumentMeta;
 import com.hkust.csit5930.searchengine.entity.DocumentTfidf;
 import org.springframework.lang.NonNull;
 
@@ -11,4 +12,7 @@ public interface DocumentService {
     Map<Long, DocumentTfidf> getTfidfByDocumentIds(@NonNull Set<Long> documentIds);
 
     long getDocumentCount();
+
+    @NonNull
+    Map<Long, DocumentMeta> getMetaByDocumentIds(@NonNull Set<Long> documentId);
 }

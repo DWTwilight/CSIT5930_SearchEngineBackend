@@ -1,42 +1,43 @@
 package com.hkust.csit5930.searchengine.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.lang.NonNull;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @ToString(callSuper = true)
 @MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor
 @AllArgsConstructor
-public class InvertedIndexBase implements Serializable {
-    @Id
-    private Long id;
-
+public class InvertedIndexBase extends EntityBase implements Serializable {
     private String term;
 
     @Column(name = "documents", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private List<Document> documents;
 
-    @CreatedDate
-    private LocalDateTime createdAt;
+    // in-memory cache for fast look-up
+    @Transient
+    private volatile Map<Long, Document> documentMap;
 
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+    @NonNull
+    public Optional<Document> findDocumentById(@NonNull Long id) {
+        if (documentMap == null) {
+            documentMap = documents.stream()
+                    .collect(Collectors.toUnmodifiableMap(Document::getId, Function.identity()));
+        }
+        return Optional.ofNullable(documentMap.get(id));
+    }
 
     @Getter
     @Setter

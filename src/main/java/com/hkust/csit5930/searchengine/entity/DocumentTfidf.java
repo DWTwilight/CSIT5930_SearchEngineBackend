@@ -1,39 +1,31 @@
 package com.hkust.csit5930.searchengine.entity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.Map;
 
+@Entity
 @Getter
 @Setter
-@ToString
-@EntityListeners(AuditingEntityListener.class)
+@ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class DocumentTfidf {
-    @Id
-    private Long id;
-
+public class DocumentTfidf extends EntityBase {
     @Column(name = "title_tfidf_vec", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<Long, Double> titleTfidfVector;
+
+    @Column(name = "title_mag")
+    private Double titleMagnitude;
 
     @Column(name = "body_tfidf_vec", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private Map<Long, Double> bodyTfidfVector;
 
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+    @Column(name = "body_mag")
+    private Double bodyMagnitude;
 }

@@ -1,6 +1,7 @@
 package com.hkust.csit5930.searchengine.util;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.util.Pair;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.tartarus.snowball.ext.PorterStemmer;
@@ -35,6 +36,22 @@ public class QueryProcessor {
     @NonNull
     public Map<String, Long> vectorize(@NonNull List<Token> tokens) {
         return tokens.stream().collect(Collectors.groupingBy(Token::word, Collectors.counting()));
+    }
+
+    @NonNull
+    public Map<Pair<String, String>, Long> getBigrams(List<Token> tokens) {
+        var bigrams = new HashMap<Pair<String, String>, Long>(); // (termAId, termBId) -> count
+        for (int i = 0; i < tokens.size() - 1; i++) {
+            var tokenA = tokens.get(i);
+            var tokenB = tokens.get(i + 1);
+            if (tokenA.pos() + 1 == tokenB.pos()) {
+                bigrams.compute(Pair.of(tokenA.word(), tokenB.word()),
+                        (bigram, count) -> Optional.ofNullable(count)
+                                .map(c -> c + 1)
+                                .orElse(1L));
+            }
+        }
+        return bigrams;
     }
 
     public record Token(String word, int pos) {

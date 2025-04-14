@@ -7,6 +7,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +16,7 @@ import static com.hkust.csit5930.searchengine.constant.CacheConstant.*;
 @Configuration
 @EnableCaching
 public class CacheConfiguration {
+    @Primary
     @Bean(INDEX_CACHE_MANAGER)
     public CacheManager indexCacheManager(@Value("${cache.memory.index.size:20}") int size, @Value("${cache.memory.index.ttl:30}") int ttl) {
         CaffeineCacheManager manager = new CaffeineCacheManager();
@@ -35,7 +37,7 @@ public class CacheConfiguration {
     }
 
     @Bean(DOCUMENT_CACHE_MANAGER)
-    public CacheManager documentCacheManager(@Value("${cache.memory.doc.size:75}") int size, @Value("${cache.memory.doc.ttl:30}") int ttl) {
+    public CacheManager documentCacheManager(@Value("${cache.memory.doc.size:100}") int size, @Value("${cache.memory.doc.ttl:30}") int ttl) {
         CaffeineCacheManager manager = new CaffeineCacheManager();
 
         manager.registerCustomCache(DOCUMENT_TFIDF_CACHE,

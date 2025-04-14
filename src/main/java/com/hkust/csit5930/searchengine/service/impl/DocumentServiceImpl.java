@@ -1,6 +1,8 @@
 package com.hkust.csit5930.searchengine.service.impl;
 
+import com.hkust.csit5930.searchengine.entity.DocumentMeta;
 import com.hkust.csit5930.searchengine.entity.DocumentTfidf;
+import com.hkust.csit5930.searchengine.entity.EntityBase;
 import com.hkust.csit5930.searchengine.repository.DocumentMetaRepository;
 import com.hkust.csit5930.searchengine.repository.DocumentTfidfRepository;
 import com.hkust.csit5930.searchengine.service.DocumentService;
@@ -8,6 +10,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -35,26 +38,45 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @NonNull
     public Map<Long, DocumentTfidf> getTfidfByDocumentIds(@NonNull Set<Long> documentIds) {
-        Cache cache = cacheManager.getCache(DOCUMENT_TFIDF_CACHE);
+        return getCachedOrDBResults(documentIds, DOCUMENT_TFIDF_CACHE, tfidfRepository::findAllById);
+    }
+
+    @Override
+    @NonNull
+    public Map<Long, DocumentMeta> getMetaByDocumentIds(@NonNull Set<Long> documentIds) {
+        return getCachedOrDBResults(documentIds, DOCUMENT_META_CACHE, metaRepository::findAllById);
+    }
+
+    @Override
+    @Cacheable(cacheManager = DOCUMENT_CACHE_MANAGER, cacheNames = DOCUMENT_COUNT_CACHE, key = "'globalCount'")
+    public long getDocumentCount() {
+        return metaRepository.count();
+    }
+
+
+    @SuppressWarnings("unchecked")
+    private <T extends EntityBase> Map<Long, T> getCachedOrDBResults(Set<Long> documentIds,
+                                                                     String cacheName,
+                                                                     Converter<Set<Long>, Iterable<T>> dbQuery) {
+        Cache cache = cacheManager.getCache(cacheName);
         assert cache != null;
-        Map<Long, DocumentTfidf> resultMap = new HashMap<>();
+        Map<Long, T> resultMap = new HashMap<>();
         Set<Long> uncachedIds = new HashSet<>();
 
         documentIds.forEach(id -> {
             Cache.ValueWrapper wrapper = cache.get(id);
             if (wrapper != null) {
-                resultMap.put(id, (DocumentTfidf) wrapper.get());
+                resultMap.put(id, (T) wrapper.get());
             } else {
                 uncachedIds.add(id);
             }
         });
 
         if (!uncachedIds.isEmpty()) {
-            Map<Long, DocumentTfidf> dbResults = StreamSupport.stream(
-                            tfidfRepository.findAllById(uncachedIds).spliterator(), false)
-                    .collect(Collectors.toMap(DocumentTfidf::getId, Function.identity()));
+            Map<Long, T> dbResults = StreamSupport.stream(
+                            dbQuery.convert(uncachedIds).spliterator(), false)
+                    .collect(Collectors.toMap(T::getId, Function.identity()));
 
-            // 第三阶段：填充缓存并合并结果
             dbResults.forEach((id, entity) -> {
                 cache.put(id, entity);
                 resultMap.put(id, entity);
@@ -62,11 +84,5 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         return Collections.unmodifiableMap(resultMap);
-    }
-
-    @Override
-    @Cacheable(cacheManager = DOCUMENT_CACHE_MANAGER, cacheNames = DOCUMENT_COUNT_CACHE, key = "'globalCount'")
-    public long getDocumentCount() {
-        return metaRepository.count();
     }
 }

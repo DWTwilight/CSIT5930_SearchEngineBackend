@@ -1,29 +1,21 @@
 package com.hkust.csit5930.searchengine.entity;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.Id;
+import jakarta.persistence.Entity;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+@Entity
 @Getter
 @Setter
-@ToString
-@EntityListeners(AuditingEntityListener.class)
+@ToString(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class DocumentMeta {
-    @Id
-    private Long id;
-
+public class DocumentMeta extends EntityBase {
     private String title;
 
     private String url;
@@ -51,10 +43,4 @@ public class DocumentMeta {
     private Long maxBodyTf;
 
     private Double pageRank;
-
-    @CreatedDate
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
 }
