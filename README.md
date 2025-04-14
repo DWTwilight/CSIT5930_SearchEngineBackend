@@ -1,24 +1,24 @@
 # CSIT5930 Search Engine Backend
 
+---
+
 ## API Doc
 
-### Search
-
-#### Endpoint
+### Endpoint
 
 **GET** `{domain}/api/v1/s`
 
-#### Request
+### Request
 
-##### Query Parameters
+#### Query Parameters
 
 | Field: Type | Required | Description            |
 |-------------|----------|------------------------|
 | q: string   | Yes      | Search Query(Original) |
 
-#### Response
+### Response
 
-##### Status Codes
+#### Status Codes
 
 | Status | Description           |
 |--------|-----------------------|
@@ -26,7 +26,7 @@
 | 400    | Bad Request           |
 | 500    | Internal Server Error |
 
-##### Response Body Structure
+#### Response Body Structure
 
 ```yml
 response:
@@ -37,7 +37,7 @@ response:
     SearchResultMeta
 ```
 
-###### SearchResult Object
+##### SearchResult Object
 
 | Field: Type                 | Description                    |
 |-----------------------------|--------------------------------|
@@ -51,21 +51,21 @@ response:
 | parentLinks: Array[string]  | Parent document links          |
 | childLinks: Array[string]   | Child document links           |
 
-###### SearchResultMeta Object
+##### SearchResultMeta Object
 
 | Field: Type    | Description             |
 |----------------|-------------------------|
 | count: integer | Total matched documents |
 
-#### Examples
+### Examples
 
-##### Request Example
+#### Request Example
 
 ```shell
 curl --location -g --request GET '{domain}/api/v1/s?q=spring+boot'
 ```
 
-##### Success Response (HTTP 200)
+#### Success Response (HTTP 200)
 
 ```json
 {
@@ -106,12 +106,18 @@ curl --location -g --request GET '{domain}/api/v1/s?q=spring+boot'
 }
 ```
 
+---
+
 ## Start the Server
+
+---
 
 ### 1. Prerequisite
 
 - docker
 - docker compose plugin (optional)
+
+---
 
 ### 2. Start Database
 
@@ -138,6 +144,8 @@ A postgres db container will be running on port `5432`, its data will be persist
 - password: `test123`
 - database name: `se_db`
 
+---
+
 ### 3. Start Backend Server
 
 #### **Option A**: Start Server with Docker
@@ -148,19 +156,26 @@ sudo docker run -it -p 8080:8080 --network="host" --name se-backend dwtwilight/c
 
 A server container will be running on port 8080, and database tables will be created automatically.
 
-#### **Option B**: Build and Start Server from Source with Gradle Wrapper(**Optional**)
+#### **Option B**: Build Native Executable and Run
 
-##### Prerequisite
-
-- Graalvm JDK 21 (https://www.graalvm.org/downloads/#)
-
-##### Command
+- Prerequisite
+    - Graalvm JDK 21 (https://www.graalvm.org/downloads/#)
 
 ```sh 
-./gradlew clean nativeCompile #  will take up to 10 minutes
-sudo docker build -t dwtwilight/csit5930-search-engine-backend:latest .
-sudo docker run -it -p 8080:8080 --network="host" --name se-backend dwtwilight/csit5930-search-engine-backend:latest
+./gradlew clean nativeCompile # compilation will take up to 10 minutes
+./gradlew nativeRun
 ```
+
+#### **Option C**: Build Jar and Run
+
+- Prerequisite
+    - JDK 21
+
+```sh 
+./gradlew clean bootRun
+```
+
+---
 
 ### 4. Migrate Data to DB
 
@@ -174,5 +189,7 @@ cd ../SearchEngineDataPreperation
 # pip install psycopg2-binary
 python migrate_db.py
 ```
+
+---
 
 ### 5. Call Search Api
