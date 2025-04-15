@@ -2,7 +2,7 @@ package com.hkust.csit5930.searchengine.service.impl;
 
 import com.hkust.csit5930.searchengine.entity.DocumentMeta;
 import com.hkust.csit5930.searchengine.entity.DocumentTfidf;
-import com.hkust.csit5930.searchengine.entity.EntityBase;
+import com.hkust.csit5930.searchengine.entity.Identifiable;
 import com.hkust.csit5930.searchengine.repository.DocumentMetaRepository;
 import com.hkust.csit5930.searchengine.repository.DocumentTfidfRepository;
 import com.hkust.csit5930.searchengine.service.DocumentService;
@@ -15,9 +15,6 @@ import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import static com.hkust.csit5930.searchengine.constant.CacheConstant.*;
 
@@ -55,9 +52,9 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     @SuppressWarnings("unchecked")
-    private <T extends EntityBase> Map<Long, T> getCachedOrDBResults(Set<Long> documentIds,
-                                                                     String cacheName,
-                                                                     Converter<Set<Long>, Iterable<T>> dbQuery) {
+    private <T extends Identifiable> Map<Long, T> getCachedOrDBResults(Set<Long> documentIds,
+                                                                       String cacheName,
+                                                                       Converter<Set<Long>, List<T>> dbQuery) {
         Cache cache = cacheManager.getCache(cacheName);
         assert cache != null;
         Map<Long, T> resultMap = new HashMap<>();
@@ -73,13 +70,9 @@ public class DocumentServiceImpl implements DocumentService {
         });
 
         if (!uncachedIds.isEmpty()) {
-            Map<Long, T> dbResults = StreamSupport.stream(
-                            dbQuery.convert(uncachedIds).spliterator(), false)
-                    .collect(Collectors.toMap(T::getId, Function.identity()));
-
-            dbResults.forEach((id, entity) -> {
-                cache.put(id, entity);
-                resultMap.put(id, entity);
+            dbQuery.convert(uncachedIds).forEach(entity -> {
+                cache.put(entity.id(), entity);
+                resultMap.put(entity.id(), entity);
             });
         }
 

@@ -1,9 +1,12 @@
 package com.hkust.csit5930.searchengine.repository;
 
 import com.hkust.csit5930.searchengine.entity.DocumentTfidf;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.lang.NonNull;
 
-@Repository
-public interface DocumentTfidfRepository extends CrudRepository<DocumentTfidf, Long> {
+import java.util.List;
+import java.util.Set;
+
+public interface DocumentTfidfRepository {
+    @NonNull
+    List<DocumentTfidf> findAllById(@NonNull Set<Long> ids);
 }

@@ -40,7 +40,7 @@ public class InvertedIndexRepositoryImpl implements InvertedIndexRepository {
     @Transactional(readOnly = true)
     public List<InvertedIndex> findTitleIndexByTermIn(@NonNull Set<String> terms) {
         return jdbcTemplate.query(
-                "SELECT id,term,documents FROM title_inverted_index WHERE term IN (:terms)",
+                "SELECT id, term, documents FROM title_inverted_index WHERE term IN (:terms)",
                 Map.of("terms", terms),
                 ROW_MAPPER);
     }

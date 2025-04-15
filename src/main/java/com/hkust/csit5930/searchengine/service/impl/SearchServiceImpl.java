@@ -122,11 +122,11 @@ public class SearchServiceImpl implements SearchService {
         var titleRelevanceScore = calculateRelevanceScore(
                 queryVector, queryBigrams, titleCandidateDocumentIds,
                 titleIndexMap, documentTfidfMap, totalDocumentCount,
-                DocumentTfidf::getTitleTfidfVector, DocumentTfidf::getTitleMagnitude);
+                DocumentTfidf::titleTfidfVector, DocumentTfidf::titleMagnitude);
         var bodyRelevanceScore = calculateRelevanceScore(
                 queryVector, queryBigrams, bodyCandidateDocumentIds,
                 bodyIndexMap, documentTfidfMap, totalDocumentCount,
-                DocumentTfidf::getBodyTfidfVector, DocumentTfidf::getBodyMagnitude);
+                DocumentTfidf::bodyTfidfVector, DocumentTfidf::bodyMagnitude);
 
         // 2. combine title and body scores
         var combinedRelevanceScore = candidateDocumentIds.stream()
@@ -140,7 +140,7 @@ public class SearchServiceImpl implements SearchService {
         // 3. get meta and construct results
         var documentMetaMap = documentService.getMetaByDocumentIds(combinedRelevanceScore.keySet());
         return documentMetaMap.values().stream()
-                .map(documentMeta -> constructSearchResult(documentMeta, combinedRelevanceScore.get(documentMeta.getId())))
+                .map(documentMeta -> constructSearchResult(documentMeta, combinedRelevanceScore.get(documentMeta.id())))
                 .sorted((a, b) -> Double.compare(b.score(), a.score()))
                 .limit(searchEngineConfiguration.getMaxResultCount())
                 .toList();
@@ -148,11 +148,11 @@ public class SearchServiceImpl implements SearchService {
 
     private SearchResult constructSearchResult(DocumentMeta documentMeta, double relevanceScore) {
         return new SearchResult(
-                documentMeta.getId(),
+                documentMeta.id(),
                 searchEngineConfiguration.getRelevanceWeight() * relevanceScore
-                        + searchEngineConfiguration.getPageRankWeight() * documentMeta.getPageRank(),
-                documentMeta.getTitle(), documentMeta.getUrl(), documentMeta.getLastModified(), documentMeta.getSize(),
-                documentMeta.getFrequentWords(), documentMeta.getParentLinks(), documentMeta.getChildLinks());
+                        + searchEngineConfiguration.getPageRankWeight() * documentMeta.pageRank(),
+                documentMeta.title(), documentMeta.url(), documentMeta.lastModified(), documentMeta.size(),
+                documentMeta.frequentWords(), documentMeta.parentLinks(), documentMeta.childLinks());
     }
 
     private Map<Long, Double> calculateRelevanceScore(Map<String, Long> queryVector,
@@ -181,7 +181,7 @@ public class SearchServiceImpl implements SearchService {
         var cosineSimilarityScores = candidateDocumentIds.stream()
                 .flatMap(docId -> Stream.ofNullable(documentTfidfMap.get(docId)))
                 .map(documentTfidf -> Pair.of(
-                        documentTfidf.getId(),
+                        documentTfidf.id(),
                         calculateCosineSimilarity(queryTfidfVector, tfidfVectorExtractor.convert(documentTfidf),
                                 queryMagnitude, docMagnitudeExtractor.convert(documentTfidf))))
                 .toList();

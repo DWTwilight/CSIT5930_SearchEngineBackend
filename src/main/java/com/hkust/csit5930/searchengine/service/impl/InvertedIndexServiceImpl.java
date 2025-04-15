@@ -38,9 +38,9 @@ public class InvertedIndexServiceImpl implements InvertedIndexService {
         return getInvertedIndexMap(terms, invertedIndexRepository::findTitleIndexByTermIn, TITLE_INDEX_CACHE);
     }
 
-    private <T extends InvertedIndex> Map<String, InvertedIndex> getInvertedIndexMap(Set<String> terms,
-                                                                                     Converter<Set<String>, List<T>> dbQuery,
-                                                                                     String cacheName) {
+    private Map<String, InvertedIndex> getInvertedIndexMap(Set<String> terms,
+                                                           Converter<Set<String>, List<InvertedIndex>> dbQuery,
+                                                           String cacheName) {
         Cache cache = cacheManager.getCache(cacheName);
         assert cache != null;
         Map<String, InvertedIndex> cachedResults = new HashMap<>();
@@ -59,11 +59,7 @@ public class InvertedIndexServiceImpl implements InvertedIndexService {
         });
 
         if (!missingTerms.isEmpty()) {
-            List<InvertedIndex> dbResults = dbQuery.convert(missingTerms).stream()
-                    .map(index -> (InvertedIndex) index)
-                    .toList();
-
-            dbResults.forEach(index -> {
+            dbQuery.convert(missingTerms).forEach(index -> {
                 String term = index.getTerm();
                 cache.put(term, index);
                 cachedResults.put(term, index);
