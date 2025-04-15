@@ -33,6 +33,12 @@ public class CacheConfiguration {
                         .expireAfterWrite(ttl, TimeUnit.MINUTES)
                         .build());
 
+        manager.registerCustomCache(BIGRAM_CACHE,
+                Caffeine.newBuilder()
+                        .maximumSize(size)
+                        .expireAfterWrite(ttl, TimeUnit.MINUTES)
+                        .build());
+
         return manager;
     }
 

@@ -9,8 +9,9 @@ import com.hkust.csit5930.searchengine.service.DocumentService;
 import com.hkust.csit5930.searchengine.service.InvertedIndexService;
 import com.hkust.csit5930.searchengine.service.SearchService;
 import com.hkust.csit5930.searchengine.util.QueryProcessor;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.NonNull;
@@ -20,21 +21,39 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static com.hkust.csit5930.searchengine.constant.CacheConstant.BIGRAM_CACHE;
+import static com.hkust.csit5930.searchengine.constant.CacheConstant.INDEX_CACHE_MANAGER;
+
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SearchServiceImpl implements SearchService {
+    private final SearchEngineConfiguration searchEngineConfiguration;
     private final QueryProcessor queryProcessor;
     private final InvertedIndexService invertedIndexService;
     private final DocumentService documentService;
-    private final SearchEngineConfiguration searchEngineConfiguration;
+    private final CacheManager cacheManager;
+
+    public SearchServiceImpl(SearchEngineConfiguration searchEngineConfiguration,
+                             QueryProcessor queryProcessor,
+                             InvertedIndexService invertedIndexService,
+                             DocumentService documentService,
+                             @Qualifier(INDEX_CACHE_MANAGER) CacheManager cacheManager) {
+        this.searchEngineConfiguration = searchEngineConfiguration;
+        this.queryProcessor = queryProcessor;
+        this.invertedIndexService = invertedIndexService;
+        this.documentService = documentService;
+        this.cacheManager = cacheManager;
+    }
 
     private static double calculateCosineSimilarity(Map<Long, Double> queryTfidfVector, Map<Long, Double> docTfidfVec,
                                                     Double queryMagnitude, Double docMagnitude) {
-        var dotProduct = queryTfidfVector.entrySet().stream()
-                .flatMapToDouble(queryEntry -> Stream.ofNullable(docTfidfVec.get(queryEntry.getKey()))
-                        .mapToDouble(docScore -> queryEntry.getValue() * docScore))
-                .sum();
+        double dotProduct = 0.0;
+        for (var queryEntry : queryTfidfVector.entrySet()) {
+            var docScore = docTfidfVec.get(queryEntry.getKey());
+            if (docScore != null) {
+                dotProduct += queryEntry.getValue() * docScore;
+            }
+        }
         return dotProduct / (queryMagnitude * docMagnitude);
     }
 
@@ -42,35 +61,45 @@ public class SearchServiceImpl implements SearchService {
         return Math.sqrt(tfidfVector.values().stream().mapToDouble(v -> v * v).sum());
     }
 
-    private static List<Pair<Long, Long>> calculateDocumentBigramMatches(InvertedIndex termAIndex, InvertedIndex termBIndex) {
-        return termAIndex.getDocuments().stream()
-                .flatMap(documentTermA ->
-                        Stream.ofNullable(
-                                termBIndex.findDocumentById(documentTermA.id())
-                                        .map(documentTermB -> {
-                                            long count = 0;
-                                            int i = 0, j = 0;
-                                            var posListA = documentTermA.pos();
-                                            var posListB = documentTermB.pos();
-                                            while (i < posListA.size() && j < posListB.size()) {
-                                                var curPosA = posListA.get(i);
-                                                var curPosB = posListB.get(j);
-                                                if (curPosA + 1 == curPosB) {
-                                                    count++;
-                                                    i++;
-                                                    j++;
-                                                } else if (curPosA > curPosB) {
-                                                    j++;
-                                                } else {
-                                                    i++;
-                                                }
-                                            }
-                                            if (count == 0) {
-                                                return null;
-                                            }
-                                            return Pair.of(documentTermB.id(), count);
-                                        }).orElse(null)))
-                .toList();
+    @SuppressWarnings("unchecked")
+    private List<Pair<Long, Long>> calculateDocumentBigramMatches(Pair<String, String> bigram, InvertedIndex termAIndex, InvertedIndex termBIndex) {
+        var cache = cacheManager.getCache(BIGRAM_CACHE);
+        assert cache != null;
+
+        return Optional.ofNullable(cache.get(bigram))
+                .map(wrapper -> (List<Pair<Long, Long>>) wrapper.get())
+                .orElseGet(() -> {
+                    var result = termAIndex.getDocuments().stream()
+                            .flatMap(documentTermA ->
+                                    Stream.ofNullable(
+                                            termBIndex.findDocumentById(documentTermA.id())
+                                                    .map(documentTermB -> {
+                                                        long count = 0;
+                                                        int i = 0, j = 0;
+                                                        var posListA = documentTermA.pos();
+                                                        var posListB = documentTermB.pos();
+                                                        while (i < posListA.size() && j < posListB.size()) {
+                                                            var curPosA = posListA.get(i);
+                                                            var curPosB = posListB.get(j);
+                                                            if (curPosA + 1 == curPosB) {
+                                                                count++;
+                                                                i++;
+                                                                j++;
+                                                            } else if (curPosA > curPosB) {
+                                                                j++;
+                                                            } else {
+                                                                i++;
+                                                            }
+                                                        }
+                                                        if (count == 0) {
+                                                            return null;
+                                                        }
+                                                        return Pair.of(documentTermB.id(), count);
+                                                    }).orElse(null)))
+                            .toList();
+                    cache.put(bigram, result);
+                    return result;
+                });
     }
 
     @Override
@@ -198,7 +227,7 @@ public class SearchServiceImpl implements SearchService {
 
                     // calculate bigram tf-idf in all documents
                     // 1. find matches in each doc, list: docId -> normalized tf (tf / max possible count)
-                    var documentBigramMatches = calculateDocumentBigramMatches(termAIndex, termBIndex);
+                    var documentBigramMatches = calculateDocumentBigramMatches(bigram, termAIndex, termBIndex);
                     if (documentBigramMatches.isEmpty()) {
                         return Stream.empty();
                     }
