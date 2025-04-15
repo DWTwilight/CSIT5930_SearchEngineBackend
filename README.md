@@ -148,7 +148,7 @@ A postgres db container will be running on port `5432`, its data will be persist
 
 ### 3. Start Backend Server
 
-#### **Option A**: Start Server with Docker
+#### **Option A**: Start Server with Native Docker Image (Linux/x64)
 
 ```sh 
 sudo docker run -it -p 8080:8080 --network="host" --name se-backend dwtwilight/csit5930-search-engine-backend:latest
