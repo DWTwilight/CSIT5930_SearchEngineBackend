@@ -166,6 +166,13 @@ A server container will be running on port 8080, and database tables will be cre
 ./gradlew nativeRun
 ```
 
+Or build docker image:
+
+```sh 
+./gradlew clean nativeCompile # compilation will take up to 10 minutes
+sudo docker build -t dwtwilight/csit5930-search-engine-backend:latest .
+```
+
 #### **Option C**: Build Jar and Run
 
 - Prerequisite
