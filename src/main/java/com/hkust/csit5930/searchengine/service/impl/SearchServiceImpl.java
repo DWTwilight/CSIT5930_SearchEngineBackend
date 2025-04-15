@@ -171,7 +171,6 @@ public class SearchServiceImpl implements SearchService {
         return documentMetaMap.values().stream()
                 .map(documentMeta -> constructSearchResult(documentMeta, combinedRelevanceScore.get(documentMeta.id())))
                 .sorted((a, b) -> Double.compare(b.score(), a.score()))
-                .limit(searchEngineConfiguration.getMaxResultCount())
                 .toList();
     }
 
@@ -249,6 +248,8 @@ public class SearchServiceImpl implements SearchService {
                                 + Optional.ofNullable(bigramMatchScores.get(cosineSim.getFirst()))
                                 .map(bigramScore -> searchEngineConfiguration.getBigramWeight() * (bigramScore / maxBigramScore))
                                 .orElse(0D)))
+                .sorted((a, b) -> b.getSecond().compareTo(a.getSecond()))
+                .limit(searchEngineConfiguration.getMaxResultCount())
                 .collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
     }
 }

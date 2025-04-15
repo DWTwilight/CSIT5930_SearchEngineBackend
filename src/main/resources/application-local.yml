@@ -3,8 +3,6 @@ spring:
     url: "jdbc:postgresql://localhost:5432/se_db"
     username: "postgres"
     password: "test123"
-  jpa:
-    show-sql: true
 logging:
   level:
     com.hkust.csit5930.searchengine: DEBUG
