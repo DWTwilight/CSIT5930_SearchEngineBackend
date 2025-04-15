@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hkust.csit5930.searchengine.entity.InvertedIndex;
 import com.hkust.csit5930.searchengine.repository.InvertedIndexRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.lang.NonNull;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@RegisterReflectionForBinding(InvertedIndex.Document.class)
 @Repository
 @RequiredArgsConstructor
 public class InvertedIndexRepositoryImpl implements InvertedIndexRepository {
