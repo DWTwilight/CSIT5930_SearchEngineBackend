@@ -3,7 +3,7 @@ package com.hkust.csit5930.searchengine.service.impl;
 import com.hkust.csit5930.searchengine.config.SearchEngineConfiguration;
 import com.hkust.csit5930.searchengine.entity.DocumentMeta;
 import com.hkust.csit5930.searchengine.entity.DocumentTfidf;
-import com.hkust.csit5930.searchengine.entity.InvertedIndexBase;
+import com.hkust.csit5930.searchengine.entity.InvertedIndex;
 import com.hkust.csit5930.searchengine.response.data.SearchResult;
 import com.hkust.csit5930.searchengine.service.DocumentService;
 import com.hkust.csit5930.searchengine.service.InvertedIndexService;
@@ -42,16 +42,16 @@ public class SearchServiceImpl implements SearchService {
         return Math.sqrt(tfidfVector.values().stream().mapToDouble(v -> v * v).sum());
     }
 
-    private static List<Pair<Long, Long>> calculateDocumentBigramMatches(InvertedIndexBase termAIndex, InvertedIndexBase termBIndex) {
+    private static List<Pair<Long, Long>> calculateDocumentBigramMatches(InvertedIndex termAIndex, InvertedIndex termBIndex) {
         return termAIndex.getDocuments().stream()
                 .flatMap(documentTermA ->
                         Stream.ofNullable(
-                                termBIndex.findDocumentById(documentTermA.getId())
+                                termBIndex.findDocumentById(documentTermA.id())
                                         .map(documentTermB -> {
                                             long count = 0;
                                             int i = 0, j = 0;
-                                            var posListA = documentTermA.getPos();
-                                            var posListB = documentTermB.getPos();
+                                            var posListA = documentTermA.pos();
+                                            var posListB = documentTermB.pos();
                                             while (i < posListA.size() && j < posListB.size()) {
                                                 var curPosA = posListA.get(i);
                                                 var curPosB = posListB.get(j);
@@ -68,7 +68,7 @@ public class SearchServiceImpl implements SearchService {
                                             if (count == 0) {
                                                 return null;
                                             }
-                                            return Pair.of(documentTermB.getId(), count);
+                                            return Pair.of(documentTermB.id(), count);
                                         }).orElse(null)))
                 .toList();
     }
@@ -96,11 +96,11 @@ public class SearchServiceImpl implements SearchService {
         // get candidate document ids
         var titleCandidateDocumentIds = titleIndexMap.values().stream()
                 .flatMap(index -> index.getDocuments().stream()
-                        .map(InvertedIndexBase.Document::getId))
+                        .map(InvertedIndex.Document::id))
                 .collect(Collectors.toUnmodifiableSet());
         var bodyCandidateDocumentIds = bodyIndexMap.values().stream()
                 .flatMap(index -> index.getDocuments().stream()
-                        .map(InvertedIndexBase.Document::getId))
+                        .map(InvertedIndex.Document::id))
                 .collect(Collectors.toUnmodifiableSet());
         Set<Long> candidateDocumentIds = Stream.concat(
                         titleCandidateDocumentIds.stream(),
@@ -158,7 +158,7 @@ public class SearchServiceImpl implements SearchService {
     private Map<Long, Double> calculateRelevanceScore(Map<String, Long> queryVector,
                                                       Map<Pair<String, String>, Long> queryBigramVector,
                                                       Set<Long> candidateDocumentIds,
-                                                      Map<String, InvertedIndexBase> invertedIndexMap,
+                                                      Map<String, InvertedIndex> invertedIndexMap,
                                                       Map<Long, DocumentTfidf> documentTfidfMap,
                                                       long totalDocumentCount,
                                                       Converter<DocumentTfidf, Map<Long, Double>> tfidfVectorExtractor,
