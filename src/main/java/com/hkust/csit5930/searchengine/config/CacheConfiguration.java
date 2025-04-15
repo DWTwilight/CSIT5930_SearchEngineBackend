@@ -46,12 +46,6 @@ public class CacheConfiguration {
     public CacheManager documentCacheManager(@Value("${cache.memory.doc.size:100}") int size, @Value("${cache.memory.doc.ttl:30}") int ttl) {
         CaffeineCacheManager manager = new CaffeineCacheManager();
 
-        manager.registerCustomCache(DOCUMENT_TFIDF_CACHE,
-                Caffeine.newBuilder()
-                        .maximumSize(size)
-                        .expireAfterWrite(ttl, TimeUnit.MINUTES)
-                        .build());
-
         manager.registerCustomCache(DOCUMENT_META_CACHE,
                 Caffeine.newBuilder()
                         .maximumSize(size)

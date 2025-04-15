@@ -29,6 +29,6 @@ public class InvertedIndex {
         return Optional.ofNullable(documentMap.get(id));
     }
 
-    public record Document(Long id, Long count, List<Long> pos) {
+    public record Document(long id, double tfidfM, List<Long> pos) {
     }
 }

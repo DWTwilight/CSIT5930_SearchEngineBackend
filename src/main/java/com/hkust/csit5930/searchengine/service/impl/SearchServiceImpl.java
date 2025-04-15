@@ -2,7 +2,6 @@ package com.hkust.csit5930.searchengine.service.impl;
 
 import com.hkust.csit5930.searchengine.config.SearchEngineConfiguration;
 import com.hkust.csit5930.searchengine.entity.DocumentMeta;
-import com.hkust.csit5930.searchengine.entity.DocumentTfidf;
 import com.hkust.csit5930.searchengine.entity.InvertedIndex;
 import com.hkust.csit5930.searchengine.response.data.SearchResult;
 import com.hkust.csit5930.searchengine.service.DocumentService;
@@ -12,7 +11,6 @@ import com.hkust.csit5930.searchengine.util.QueryProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.CacheManager;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -43,18 +41,6 @@ public class SearchServiceImpl implements SearchService {
         this.invertedIndexService = invertedIndexService;
         this.documentService = documentService;
         this.cacheManager = cacheManager;
-    }
-
-    private static double calculateCosineSimilarity(Map<Long, Double> queryTfidfVector, Map<Long, Double> docTfidfVec,
-                                                    Double queryMagnitude, Double docMagnitude) {
-        double dotProduct = 0.0;
-        for (var queryEntry : queryTfidfVector.entrySet()) {
-            var docScore = docTfidfVec.get(queryEntry.getKey());
-            if (docScore != null) {
-                dotProduct += queryEntry.getValue() * docScore;
-            }
-        }
-        return dotProduct / (queryMagnitude * docMagnitude);
     }
 
     private static double calculateMagnitude(Map<Long, Double> tfidfVector) {
@@ -139,9 +125,6 @@ public class SearchServiceImpl implements SearchService {
             return List.of();
         }
 
-        // get pre-computed document tf-idf vectors
-        var documentTfidfMap = documentService.getTfidfByDocumentIds(candidateDocumentIds);
-
         // find query bigrams
         var queryBigrams = queryProcessor.getBigrams(queryTokens);
 
@@ -150,12 +133,10 @@ public class SearchServiceImpl implements SearchService {
         var totalDocumentCount = documentService.getDocumentCount();
         var titleRelevanceScore = calculateRelevanceScore(
                 queryVector, queryBigrams, titleCandidateDocumentIds,
-                titleIndexMap, documentTfidfMap, totalDocumentCount,
-                DocumentTfidf::titleTfidfVector, DocumentTfidf::titleMagnitude);
+                titleIndexMap, totalDocumentCount);
         var bodyRelevanceScore = calculateRelevanceScore(
                 queryVector, queryBigrams, bodyCandidateDocumentIds,
-                bodyIndexMap, documentTfidfMap, totalDocumentCount,
-                DocumentTfidf::bodyTfidfVector, DocumentTfidf::bodyMagnitude);
+                bodyIndexMap, totalDocumentCount);
 
         // 2. combine title and body scores
         var combinedRelevanceScore = candidateDocumentIds.stream()
@@ -187,10 +168,7 @@ public class SearchServiceImpl implements SearchService {
                                                       Map<Pair<String, String>, Long> queryBigramVector,
                                                       Set<Long> candidateDocumentIds,
                                                       Map<String, InvertedIndex> invertedIndexMap,
-                                                      Map<Long, DocumentTfidf> documentTfidfMap,
-                                                      long totalDocumentCount,
-                                                      Converter<DocumentTfidf, Map<Long, Double>> tfidfVectorExtractor,
-                                                      Converter<DocumentTfidf, Double> docMagnitudeExtractor) {
+                                                      long totalDocumentCount) {
         if (candidateDocumentIds.isEmpty()) {
             return Map.of();
         }
@@ -206,13 +184,12 @@ public class SearchServiceImpl implements SearchService {
 
         // 1.2 calculate tf-idf cosine similarities
         double queryMagnitude = calculateMagnitude(queryTfidfVector);
-        var cosineSimilarityScores = candidateDocumentIds.stream()
-                .flatMap(docId -> Stream.ofNullable(documentTfidfMap.get(docId)))
-                .map(documentTfidf -> Pair.of(
-                        documentTfidf.id(),
-                        calculateCosineSimilarity(queryTfidfVector, tfidfVectorExtractor.convert(documentTfidf),
-                                queryMagnitude, docMagnitudeExtractor.convert(documentTfidf))))
-                .toList();
+        var cosineSimilarityScores = invertedIndexMap.values().stream()
+                .flatMap(invertedIndex -> invertedIndex.getDocuments().stream()
+                        .map(document -> Pair.of(
+                                document.id(),
+                                document.tfidfM() * queryTfidfVector.getOrDefault(invertedIndex.getId(), 0D) / queryMagnitude)))
+                .collect(Collectors.groupingBy(Pair::getFirst, Collectors.summingDouble(Pair::getSecond)));
 
         // 2. perform phrase matching(Bigram)
         var bigramMatchScores = queryBigramVector.entrySet().stream()
@@ -240,12 +217,12 @@ public class SearchServiceImpl implements SearchService {
                 }).collect(Collectors.groupingBy(Pair::getFirst, Collectors.summingDouble(Pair::getSecond)));
 
         // 3. normalize and combine the scores
-        var maxCosineSimScore = cosineSimilarityScores.stream().mapToDouble(Pair::getSecond).max().getAsDouble();
+        var maxCosineSimScore = cosineSimilarityScores.isEmpty() ? 1 : Collections.max(cosineSimilarityScores.values());
         var maxBigramScore = bigramMatchScores.isEmpty() ? 1 : Collections.max(bigramMatchScores.values());
-        return cosineSimilarityScores.stream()
-                .map(cosineSim -> Pair.of(cosineSim.getFirst(),
-                        searchEngineConfiguration.getCosineWeight() * (cosineSim.getSecond() / maxCosineSimScore)
-                                + Optional.ofNullable(bigramMatchScores.get(cosineSim.getFirst()))
+        return cosineSimilarityScores.entrySet().stream()
+                .map(cosineSim -> Pair.of(cosineSim.getKey(),
+                        searchEngineConfiguration.getCosineWeight() * (cosineSim.getValue() / maxCosineSimScore)
+                                + Optional.ofNullable(bigramMatchScores.get(cosineSim.getKey()))
                                 .map(bigramScore -> searchEngineConfiguration.getBigramWeight() * (bigramScore / maxBigramScore))
                                 .orElse(0D)))
                 .sorted((a, b) -> b.getSecond().compareTo(a.getSecond()))
