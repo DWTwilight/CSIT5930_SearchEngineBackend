@@ -123,9 +123,9 @@ public class SearchServiceImpl implements SearchService {
         var maxSimilarityScore = Collections.max(similarityScores.values());
         return similarityScores.entrySet().stream()
                 .filter(scorePair -> scorePair.getValue() > searchEngineConfiguration.getMinScoreThreshold())
-                .map(scorePair -> Pair.of(scorePair.getKey(), scorePair.getValue() / maxSimilarityScore))
-                .sorted((a, b) -> b.getSecond().compareTo(a.getSecond()))
+                .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
                 .limit(searchEngineConfiguration.getMaxResultCount())
+                .map(scorePair -> Pair.of(scorePair.getKey(), scorePair.getValue() / maxSimilarityScore))
                 .collect(Collectors.toUnmodifiableMap(Pair::getFirst, Pair::getSecond));
     }
 }
