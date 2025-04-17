@@ -34,8 +34,17 @@ public class QueryProcessor {
     }
 
     @NonNull
-    public Map<String, Long> vectorize(@NonNull List<Token> tokens) {
-        return tokens.stream().collect(Collectors.groupingBy(Token::word, Collectors.counting()));
+    public Map<String, Long> vectorizeWithNGram(@NonNull List<Token> tokens, int n) {
+        var vector = new HashMap<String, Long>();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < tokens.size() - i; j++) {
+                if (tokens.get(j).pos() + i == tokens.get(j + i).pos()) {
+                    var term = tokens.stream().skip(j).limit(i + 1).map(Token::word).collect(Collectors.joining(" "));
+                    vector.compute(term, (k, v) -> Objects.isNull(v) ? 1 : v + 1);
+                }
+            }
+        }
+        return vector;
     }
 
     @NonNull

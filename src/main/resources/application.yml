@@ -22,13 +22,14 @@ cache:
       size: 150
       ttl: 30
     doc:
-      size: 300
+      size: 200
       ttl: 30
 search-engine:
+  n-gram-count: 4
   title-weight: 0.7
   body-weight: 0.3
-  cosine-weight: 0.7
-  bigram-weight: 0.3
+  term-cosine-weight: 0.7
+  n-gram-weight: 0.3
   relevance-weight: 0.9
   page-rank-weight: 0.1
   min-score-threshold: 0

@@ -60,7 +60,7 @@ public class InvertedIndexServiceImpl implements InvertedIndexService {
 
         if (!missingTerms.isEmpty()) {
             dbQuery.convert(missingTerms).forEach(index -> {
-                String term = index.getTerm();
+                String term = index.term();
                 cache.put(term, index);
                 cachedResults.put(term, index);
                 missingTerms.remove(term);

@@ -10,11 +10,13 @@ import org.springframework.stereotype.Component;
 @Getter
 @Setter
 public class SearchEngineConfiguration {
+    private int nGramCount;
+
     private double titleWeight;
     private double bodyWeight;
 
-    private double cosineWeight;
-    private double bigramWeight;
+    private double termCosineWeight;
+    private double nGramWeight;
 
     private double relevanceWeight;
     private double pageRankWeight;

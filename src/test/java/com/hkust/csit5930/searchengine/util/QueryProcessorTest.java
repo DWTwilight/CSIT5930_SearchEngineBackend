@@ -59,9 +59,9 @@ class QueryProcessorTest {
 
     @Test
     void should_vectorize_tokens() {
-        List<QueryProcessor.Token> tokens = queryProcessor.tokenize("this is a vectorize test, let's see the test results");
-        var vector = queryProcessor.vectorize(tokens);
-        assertEquals(3, vector.size());
+        List<QueryProcessor.Token> tokens = queryProcessor.tokenize("this is a vectorize test, let's see the test results hong kong");
+        var vector = queryProcessor.vectorizeWithNGram(tokens, 4);
+        assertEquals(12, vector.size());
         assertEquals(2, vector.get("test"));
     }
 

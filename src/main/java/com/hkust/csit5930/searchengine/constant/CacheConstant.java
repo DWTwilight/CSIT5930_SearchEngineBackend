@@ -9,7 +9,6 @@ public class CacheConstant {
 
     public static final String BODY_INDEX_CACHE = "bodyIndexCache";
     public static final String TITLE_INDEX_CACHE = "titleIndexCache";
-    public static final String BIGRAM_CACHE = "bigramCache";
 
     public static final String DOCUMENT_META_CACHE = "documentMetaCache";
     public static final String DOCUMENT_COUNT_CACHE = "documentCountCache";
