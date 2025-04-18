@@ -3,11 +3,11 @@ package com.hkust.csit5930.searchengine.service.impl;
 import com.hkust.csit5930.searchengine.entity.DocumentMeta;
 import com.hkust.csit5930.searchengine.repository.DocumentMetaRepository;
 import com.hkust.csit5930.searchengine.service.DocumentService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,7 @@ import java.util.*;
 
 import static com.hkust.csit5930.searchengine.constant.CacheConstant.*;
 
+@Slf4j
 @Service
 public class DocumentServiceImpl implements DocumentService {
     private final DocumentMetaRepository metaRepository;
@@ -44,7 +45,8 @@ public class DocumentServiceImpl implements DocumentService {
         });
 
         if (!uncachedIds.isEmpty()) {
-            ((Converter<Set<Long>, List<DocumentMeta>>) metaRepository::findAllById).convert(uncachedIds).forEach(entity -> {
+            log.debug("meta cache missed, fetching {} records from db", uncachedIds.size());
+            metaRepository.findAllById(uncachedIds).forEach(entity -> {
                 cache.put(entity.id(), entity);
                 resultMap.put(entity.id(), entity);
             });

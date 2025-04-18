@@ -54,5 +54,7 @@ graalvmNative {
 
     binaries.main {
         buildArgs.add('-O3')
-    }
+		buildArgs.add('--gc=G1')
+		buildArgs.add('--parallelism=2')
+	}
 }

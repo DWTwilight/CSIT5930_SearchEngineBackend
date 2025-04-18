@@ -3,6 +3,7 @@ package com.hkust.csit5930.searchengine.service.impl;
 import com.hkust.csit5930.searchengine.entity.InvertedIndex;
 import com.hkust.csit5930.searchengine.repository.InvertedIndexRepository;
 import com.hkust.csit5930.searchengine.service.InvertedIndexService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -14,6 +15,7 @@ import java.util.*;
 
 import static com.hkust.csit5930.searchengine.constant.CacheConstant.*;
 
+@Slf4j
 @Service
 public class InvertedIndexServiceImpl implements InvertedIndexService {
     private final InvertedIndexRepository invertedIndexRepository;
@@ -59,6 +61,7 @@ public class InvertedIndexServiceImpl implements InvertedIndexService {
         });
 
         if (!missingTerms.isEmpty()) {
+            log.debug("index cache missed, fetching {} records from db", missingTerms.size());
             dbQuery.convert(missingTerms).forEach(index -> {
                 String term = index.term();
                 cache.put(term, index);
