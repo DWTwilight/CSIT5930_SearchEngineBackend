@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.tartarus.snowball.ext.PorterStemmer;
+import org.tartarus.snowball.ext.EnglishStemmer;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class QueryProcessor {
     private final Set<String> stopWords;
-    private final PorterStemmer stem = new PorterStemmer();
+    private final EnglishStemmer stem = new EnglishStemmer();
 
     @NonNull
     public List<Token> tokenize(@NonNull String query) {

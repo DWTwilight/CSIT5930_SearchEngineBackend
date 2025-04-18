@@ -42,7 +42,8 @@ class QueryProcessorTest {
         return List.of(
                 Arguments.of("Test!ing 123", List.of("test", "ing", "123")),
                 Arguments.of("Hello@WORLD", List.of("hello", "world")),
-                Arguments.of("empty''''string", List.of("empti", "string"))
+                Arguments.of("empty''''string", List.of("empti", "string")),
+                Arguments.of("bbc news", List.of("bbc", "news"))
         );
     }
 
